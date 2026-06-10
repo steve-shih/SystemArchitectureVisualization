@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRE 架構與封包狀態綜合模擬儀表板</title>
+    <style>
+        :root {
+            --bg: #060a14;
+            --header-bg: rgba(7, 12, 25, 0.94);
+            --border: #263a61;
+            --text: #eef4ff;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        header {
+            height: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        h1 {
+            font-size: 16px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .badge {
+            background: linear-gradient(135deg, #2776ff, #6fa9ff);
+            color: white;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-weight: 800;
+        }
+        .container {
+            display: flex;
+            flex: 1;
+            width: 100%;
+            height: calc(100vh - 50px);
+        }
+        .panel {
+            flex: 1;
+            position: relative;
+        }
+        .panel-left {
+            border-right: 2px solid var(--border);
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+        /* 隱藏 SRE.html 內原本的 Header 讓畫面更乾淨 */
+        .cover-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 0px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>SRE 架構流量與封包狀態綜合模擬 <span class="badge">綜合檢視模式</span></h1>
+        <div style="font-size: 12px; color: #9fb0d0;">左側：操作架構與打入流量 / 右側：同步點選觀看封包於各層的變化</div>
+    </header>
+    
+    <div class="container">
+        <!-- 左側面板：機器流量模擬器 -->
+        <div class="panel panel-left">
+            <iframe src="SRE.html" title="SRE Architecture Simulator"></iframe>
+        </div>
+        
+        <!-- 右側面板：封包傳遞狀態說明 -->
+        <div class="panel panel-right">
+            <iframe src="net.html" title="Network Layer State"></iframe>
+        </div>
+    </div>
+</body>
+</html>

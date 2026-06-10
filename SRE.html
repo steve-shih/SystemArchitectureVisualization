@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DevOps / SRE 架構模擬器｜完整驗證版</title>
+    <!-- 引入獨立的 CSS 樣式表 -->
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <header>
+        <div>
+            <h1>DevOps / SRE 企業架構互動模擬器｜完整驗證版</h1>
+            <div class="hint">小公司～超大複雜專案｜線上封包動畫｜平衡位置/演算法｜Queue/Limit｜CPU/Memory警告｜故障/修復｜水平/垂直升規</div>
+        </div>
+        <div class="hint">節點可拖曳｜空白處可平移｜滑鼠滾輪縮放</div>
+    </header>
+    
+    <div class="layout">
+        <!-- 左側面板：設定與操作 -->
+        <aside class="sidebar">
+            <div class="section">
+                <h2>架構等級</h2>
+                <label>選擇架構</label>
+                <select id="level"></select>
+                <p>保留原本等級，新增「中型公司：Nginx + Docker + PM2」。</p>
+            </div>
+            
+            <div class="section">
+                <h2>流量 / 平衡模擬</h2>
+                <div class="row">
+                    <div>
+                        <label>流量筆數</label>
+                        <input id="trafficCount" type="number" min="1" max="1000" value="30">
+                    </div>
+                    <div>
+                        <label>每筆大小 KB</label>
+                        <input id="packetSize" type="number" min="1" value="128">
+                    </div>
+                </div>
+                <div class="row">
+                    <div>
+                        <label>動畫速度</label>
+                        <select id="speed">
+                            <option value="3400">超慢</option>
+                            <option value="2600" selected>很慢</option>
+                            <option value="1800">慢</option>
+                            <option value="1100">普通</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>來源 IP 數</label>
+                        <input id="clientCount" type="number" min="1" max="100" value="6">
+                    </div>
+                </div>
+                <label>平衡演算法</label>
+                <select id="algorithm">
+                    <option value="roundRobin">Round Robin 輪詢</option>
+                    <option value="random">Random 隨機</option>
+                    <option value="leastConnection">Least Connection 最少連線</option>
+                    <option value="weighted">Weighted 權重</option>
+                    <option value="ipHash">IP Hash 固定來源</option>
+                </select>
+                <label>指定在哪一層做平衡</label>
+                <select id="balanceAt">
+                    <option value="auto">自動：遇到分岔就平衡</option>
+                    <option value="first">第一個可分流節點</option>
+                    <option value="nginx">Nginx</option>
+                    <option value="gcp-lb">GCP Load Balancer / CDN</option>
+                    <option value="k8s-service">K8s Service</option>
+                    <option value="queue">Queue 出隊</option>
+                </select>
+                <button id="startTraffic">開始流量動畫</button>
+            </div>
+            
+            <div class="section">
+                <h2>Queue / Limit</h2>
+                <div class="row">
+                    <div>
+                        <label>Queue 容量</label>
+                        <input id="queueCapacity" type="number" min="0" value="20">
+                    </div>
+                    <div>
+                        <label>每秒處理</label>
+                        <input id="queueRate" type="number" min="1" value="4">
+                    </div>
+                </div>
+                <label>超過 Queue Limit</label>
+                <select id="overflowMode">
+                    <option value="drop">丟棄 Drop</option>
+                    <option value="reject">拒絕 429</option>
+                    <option value="wait">等待 Wait</option>
+                </select>
+                <button class="warnbtn" id="simulateBurst">模擬突發流量 Burst</button>
+            </div>
+            
+            <div class="section">
+                <h2>升規模擬</h2>
+                <div class="row">
+                    <button id="horizontalScale">水平擴容 +1</button>
+                    <button id="verticalScale">垂直升規選取節點</button>
+                </div>
+                <p>水平擴容會在目前可平衡層後方新增 App/Pod，垂直升規會提高選取節點 CPU / Memory 並降低使用率。</p>
+            </div>
+            
+            <div class="section">
+                <h2>畫布操作</h2>
+                <div class="row3">
+                    <button id="zoomIn">放大</button>
+                    <button id="zoomOut">縮小</button>
+                    <button id="resetView">重置</button>
+                </div>
+                <p><span class="kbd">拖節點</span> 手動排版；<span class="kbd">拖空白處</span> 平移；<span class="kbd">滾輪</span> 縮放。</p>
+            </div>
+        </aside>
+        
+        <!-- 中央區域：畫布與圖形 -->
+        <main class="canvasWrap" id="canvasWrap">
+            <div class="toolbar">
+                <button id="fitView">適合畫面</button>
+                <button id="clearPackets">清除封包</button>
+                <button id="repairAll" class="good">全部修復</button>
+            </div>
+            <div class="stage" id="stage">
+                <svg id="svg">
+                    <defs>
+                        <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                            <path d="M0,0 L0,6 L9,3 z" fill="#586b95"></path>
+                        </marker>
+                    </defs>
+                </svg>
+                <div id="nodes"></div>
+            </div>
+        </main>
+        
+        <!-- 右側面板：屬性與狀態 -->
+        <aside class="inspector">
+            <div class="section">
+                <h2>選取節點</h2>
+                <div id="selectedInfo">
+                    <p>點選任一節點後可設定 CPU、Memory、Limit、故障與修復。</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>資源與限制</h2>
+                <label>CPU Core</label>
+                <input id="cpuLimit" type="number" min="0.1" step="0.1">
+                <label>Memory GB</label>
+                <input id="memoryLimit" type="number" min="0.1" step="0.1">
+                <label>CPU 使用率 %</label>
+                <input id="cpuUsage" type="number" min="0" max="300">
+                <label>Memory 使用率 %</label>
+                <input id="memoryUsage" type="number" min="0" max="300">
+                <label>警告門檻 %</label>
+                <input id="warnThreshold" type="number" min="1" max="300">
+                <label>節點流量上限 / 批次</label>
+                <input id="nodeLimit" type="number" min="1">
+                
+                <div class="row">
+                    <button id="applyResource">套用設定</button>
+                    <button class="danger" id="failSelected">故障</button>
+                </div>
+                <button class="good" id="repairSelected" style="margin-top:8px">修復 / 重啟</button>
+            </div>
+            
+            <div class="section">
+                <h2>負載統計</h2>
+                <div id="stats"></div>
+            </div>
+            
+            <div class="section">
+                <h2>故障修復說明</h2>
+                <div id="repairGuide">
+                    <p>選取節點後會顯示對應修復方向。</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>事件紀錄</h2>
+                <div class="log" id="log"></div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- 引入主邏輯腳本 -->
+    <script src="app.js"></script>
+</body>
+</html>

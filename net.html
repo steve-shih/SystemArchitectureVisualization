@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>登入 API：從瀏覽器到伺服器每一層資料長相動畫</title>
+    <link rel="stylesheet" href="net.css" />
+</head>
+
+<body>
+    <header>
+        <h1>登入 API 每一層資料長相：Browser → Switch → Router → Server</h1>
+        <div class="subtitle">
+            範例固定為登入 API：帳號 <b>steve</b>、密碼 <span class="password">123</span>、驗證碼 <b>AB12</b>。
+            每一層都完整展示，不用省略符號；密碼只要以明文存在，就用紅字標記。到 TLS 後外部只能看到加密位元組。
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="control-row">
+                <button class="primary" onclick="playAll()">▶ 自動播放</button>
+                <button onclick="prevLayer()">上一層</button>
+                <button onclick="nextLayer()">下一層</button>
+            </div>
+            <div class="control-row">
+                <button onclick="setMode('request')" id="mode-request" class="active">Request 去程</button>
+                <button onclick="setMode('response')" id="mode-response">Response 回程</button>
+            </div>
+            <div class="layer-list" id="layerList"></div>
+        </aside>
+
+        <main class="main">
+            <section class="main-card">
+                <div class="top-grid">
+                    <div class="network-stage">
+                        <div class="devices" id="devices"></div>
+                        <div class="arrow-line">
+                            <div class="packet" id="packet">LOGIN</div>
+                        </div>
+                        <div class="flow-note">
+                            <div class="pill"><b>電腦內部：</b>Browser、DNS、TLS、TCP/IP、網卡</div>
+                            <div class="pill"><b>區網：</b>Switch、ARP、MAC Frame</div>
+                            <div class="pill"><b>路由：</b>Router、NAT、Firewall、ISP</div>
+                            <div class="pill"><b>伺服器：</b>LB、WAF、Nginx、Node、Redis、MongoDB</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="step-title">
+                            <h2 id="stepTitle"></h2>
+                            <span class="badge" id="stepBadge"></span>
+                        </div>
+                        <div class="explain" id="stepExplain"></div>
+                        <div class="code-title">此層資料完整長相</div>
+                        <pre id="stepCode"></pre>
+                    </div>
+                </div>
+            </section>
+
+            <section class="detail-card">
+                <div class="detail-grid">
+                    <div class="info-box">
+                        <h3>這一層用到的技術 / 輔助選項</h3>
+                        <ul id="techList"></ul>
+                    </div>
+                    <div class="info-box">
+                        <h3>安全重點與可觀察工具</h3>
+                        <ul id="securityList"></ul>
+                    </div>
+                </div>
+
+                <div class="code-title">完整封裝 / 拆解觀念</div>
+                <pre id="wrapCode"></pre>
+
+                <div class="code-title">此層常見問題</div>
+                <table class="mini-table">
+                    <thead>
+                        <tr>
+                            <th>問題</th>
+                            <th>原因</th>
+                            <th>處理方向</th>
+                        </tr>
+                    </thead>
+                    <tbody id="problemTable"></tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+
+    <script src="net.js"></script>
+</body>
+
+</html>
